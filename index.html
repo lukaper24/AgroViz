@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroViz Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script defer src="https://d3js.org/d3.v7.min.js"></script>
+    <script defer src="https://unpkg.com/topojson-client@3"></script>
+    <script defer src="script.js"></script>
+</head>
+<body>
+
+<div id="loader">
+    <div class="spinner"></div>
+    <p>Učitavanje podataka...</p>
+</div>
+
+<header class="hero">
+    <div class="hero-content">
+        <h1>🌍 AgroViz Dashboard</h1>
+        <p>Interaktivna analiza poljoprivrednih prinosa, klimatskih podataka i utjecaja pesticida.</p>
+        <button id="themeToggle" class="theme-toggle" type="button">🌙 Tamni način</button>
+    </div>
+</header>
+
+<main>
+    <section class="filters">
+        <div>
+            <label for="countryFilter">Država:</label>
+            <select id="countryFilter">
+                <option value="All">Sve države</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="cropFilter">Usjev:</label>
+            <select id="cropFilter">
+                <option value="All">Svi usjevi</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="yearFilter">Godina:</label>
+            <select id="yearFilter">
+                <option value="All">Sve godine</option>
+            </select>
+        </div>
+
+        <button id="applyBtn" type="button">Primijeni filtere</button>
+        <button id="resetBtn" class="secondary-btn" type="button">Poništi filtere</button>
+    </section>
+
+    <section id="noDataMessage" class="no-data">
+        Nema podataka za odabranu kombinaciju filtera.
+    </section>
+
+    <section class="kpi-container">
+        <div class="kpi-card">
+            <span>🌾</span>
+            <h2>Prosječni prinos</h2>
+            <p id="avgYield">0</p>
+        </div>
+
+        <div class="kpi-card">
+            <span>🌡️</span>
+            <h2>Prosječna temperatura</h2>
+            <p id="avgTemp">0</p>
+        </div>
+
+        <div class="kpi-card">
+            <span>🌧️</span>
+            <h2>Prosječne oborine</h2>
+            <p id="avgRain">0</p>
+        </div>
+
+        <div class="kpi-card">
+            <span>📊</span>
+            <h2>Broj zapisa</h2>
+            <p id="recordCount">0</p>
+        </div>
+    </section>
+
+    <section class="analytics-panel">
+        <div class="analytics-card">
+            <h3>📈 Najveći rast prinosa</h3>
+            <p id="bestGrowth">-</p>
+        </div>
+
+        <div class="analytics-card">
+            <h3>🌍 Država s najvećim prosječnim prinosom</h3>
+            <p id="topCountry">-</p>
+        </div>
+
+        <div class="analytics-card">
+            <h3>🌡️ Godina s najvišom prosječnom temperaturom</h3>
+            <p id="hottestYear">-</p>
+        </div>
+    </section>
+
+
+    <section class="advanced-panel">
+        <div class="chart-card full-width-card animation-card">
+            <h2>Animacija prinosa kroz godine</h2>
+            <p class="chart-description">
+                Animirani prikaz koristi odabranu državu i usjev iz glavnih filtera te prikazuje kretanje prosječnog prinosa kroz godine.
+            </p>
+
+            <div class="advanced-controls">
+                <button id="playAnimationBtn" type="button">▶ Pokreni animaciju</button>
+                <span id="animationStatus">Odaberi državu i usjev pa pokreni animaciju.</span>
+            </div>
+
+            <svg id="yearAnimationChart"></svg>
+        </div>
+
+        <div class="chart-card full-width-card comparison-card">
+            <h2>Usporedba dvije države</h2>
+            <p class="chart-description">
+                Usporedba prikazuje dvije odabrane države prema dostupnim filterima za usjev i godinu.
+            </p>
+
+            <div class="comparison-controls">
+                <div>
+                    <label for="compareCountryA">Država 1:</label>
+                    <select id="compareCountryA"></select>
+                </div>
+
+                <div>
+                    <label for="compareCountryB">Država 2:</label>
+                    <select id="compareCountryB"></select>
+                </div>
+
+                <div>
+                    <label for="compareCrop">Usjev:</label>
+                    <select id="compareCrop"></select>
+                </div>
+
+                <div>
+                    <label for="compareYear">Godina:</label>
+                    <select id="compareYear"></select>
+                </div>
+
+                <button id="compareBtn" type="button">Usporedi države</button>
+            </div>
+
+            <svg id="comparisonChart"></svg>
+            <div id="comparisonSummary" class="comparison-summary"></div>
+        </div>
+    </section>
+
+
+    <section class="dashboard-grid">
+        <div class="chart-card large-card">
+            <h2>Prinos usjeva kroz godine</h2>
+            <p class="chart-description">Linijski graf prikazuje promjenu prosječnog prinosa kroz vrijeme.</p>
+            <svg id="lineChart"></svg>
+        </div>
+
+        <div class="chart-card">
+            <h2 class="bar-chart-title">Top 10 država po prinosu</h2>
+            <p class="chart-description">Stupčasti graf omogućuje usporedbu država prema prosječnom prinosu.</p>
+            <svg id="barChart"></svg>
+        </div>
+
+        <div class="chart-card">
+            <h2>Pesticidi i prinos usjeva</h2>
+            <p class="chart-description">Raspršeni dijagram prikazuje povezanost korištenja pesticida i prinosa.</p>
+            <svg id="scatterPlot"></svg>
+        </div>
+
+        <div class="chart-card pie-card" id="openPieModal" role="button" tabindex="0">
+            <h2>Distribucija usjeva</h2>
+            <p class="chart-description">Kružni dijagram prikazuje zastupljenost usjeva u trenutno odabranim podacima.</p>
+            <svg id="pieChart"></svg>
+        </div>
+
+        <div class="chart-card">
+            <h2>Geografska karta prinosa</h2>
+            <p class="chart-description">
+                Tamnija zelena boja označava veći prosječni prinos usjeva. Klikom na kartu otvara se veći prikaz.
+            </p>
+            <svg id="worldMap"></svg>
+            <div class="map-legend">
+                <span>Niži prinos</span>
+                <div class="legend-gradient"></div>
+                <span>Veći prinos</span>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div id="mapModal" class="map-modal">
+    <div class="map-modal-content">
+        <button id="closeMapModal" type="button">Zatvori kartu ✕</button>
+        <h2>Velika geografska karta prinosa usjeva</h2>
+        <p>Tamnija zelena boja označava veći prosječni prinos usjeva.</p>
+        <svg id="largeWorldMap"></svg>
+        <div class="map-legend">
+            <span>Niži prinos</span>
+            <div class="legend-gradient"></div>
+            <span>Veći prinos</span>
+        </div>
+    </div>
+</div>
+
+<div id="pieModal" class="map-modal">
+    <div class="map-modal-content pie-modal-content">
+        <button id="closePieModal" type="button">Zatvori graf ✕</button>
+        <h2>Veliki prikaz distribucije usjeva</h2>
+        <p>Kružni dijagram prikazuje zastupljenost usjeva za trenutno odabrane filtere.</p>
+        <svg id="largePieChart"></svg>
+    </div>
+</div>
+
+<div id="tooltip"></div>
+
+</body>
+</html>
